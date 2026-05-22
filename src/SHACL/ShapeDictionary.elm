@@ -10,12 +10,48 @@ module SHACL.ShapeDictionary exposing
     , reassembleShapeTTLfromEntry
     )
 
+{-| Dictionaries of named SHACL shapes, loaded from disk or a network
+endpoint and held in memory as parsed Turtle plus the prefix declarations
+needed to re-serialize them.
+
+A `ShapeCollection` groups a `ShapeDictionary` (the named shapes keyed
+by short name) with the `PrefixDictionary` of CURIE prefixes used across
+those shapes. A `ShapeCollectionEntry` wraps that with its source file
+path, derived key, and a separate dictionary of "common" shapes (prefix
+declarations and SPARQL function libraries shared across the collection).
+
+
+# Entries
+
+@docs ShapeEntry, ShapeDictionary
+
+
+# Collections
+
+@docs ShapeCollection, ShapeCollectionEntry, ShapeCollections
+
+
+# Building from parsed input
+
+@docs buildEntry, shapeCollectionResponseDecoder
+
+
+# Reassembling Turtle
+
+@docs reassembleShapeTTL, reassembleShapeTTLfromEntry
+
+-}
+
 import Dict exposing (Dict)
 import Json.Decode as D
 import Rdf.Core.Types exposing (PrefixDictionary)
 import SHACL.Internal.CoreFunctions exposing (keyFromFilePath)
 
 
+{-| A single named SHACL shape: its display name, a human-readable
+description, and the Turtle source of the shape itself (without prefix
+declarations).
+-}
 type alias ShapeEntry =
     { name : String
     , description : String
@@ -23,10 +59,15 @@ type alias ShapeEntry =
     }
 
 
+{-| Map from short name (the key in the source TTL) to its `ShapeEntry`.
+-}
 type alias ShapeDictionary =
     Dict String ShapeEntry
 
 
+{-| A parsed shape collection: the named shapes and the prefix
+dictionary needed to render them as valid Turtle.
+-}
 type alias ShapeCollection =
     { shapes : ShapeDictionary
     , prefixes : PrefixDictionary
@@ -48,12 +89,15 @@ type alias ShapeCollectionEntry =
     }
 
 
+{-| Map of `ShapeCollectionEntry` values keyed by their derived `key`
+(usually the source file basename without the `.ttl` extension).
+-}
 type alias ShapeCollections =
     Dict String ShapeCollectionEntry
 
 
 {-| Build a `ShapeCollectionEntry` from the raw parser output and its
-source path. The key and label both default to `keyFromFilePath`.
+source path. The `key` and `label` both default to `keyFromFilePath`.
 -}
 buildEntry :
     { filePath : String
@@ -75,6 +119,10 @@ buildEntry { filePath, commonShapes, collection } =
     }
 
 
+{-| Decode the JSON response from the TS shape-collection parser:
+the source path, a dictionary of common shapes, and the named-shape
+collection (shapes + prefixes).
+-}
 shapeCollectionResponseDecoder :
     D.Decoder
         { filePath : String
@@ -119,6 +167,10 @@ prefixDictionaryDecoder =
         |> D.map Dict.fromList
 
 
+{-| Reassemble a valid Turtle document from a selection of shape keys.
+Joins the collection's prefix declarations, every common shape, and the
+named shapes whose keys appear in the given list (in source order).
+-}
 reassembleShapeTTL : ShapeDictionary -> ShapeCollection -> List String -> String
 reassembleShapeTTL commonShapesDict collection shapeKeys =
     let
