@@ -1,4 +1,25 @@
-module SHACL.SHACLtypes exposing (..)
+module SHACL.SHACLtypes exposing
+    ( Class
+    , ConstraintComponent
+    , ConstraintComponentType
+    , ConstraintValidator(..)
+    , Instance
+    , NodeShape
+    , Property
+    , PropertyGroup
+    , PropertyShape
+    , SHACLconstruct(..)
+    , SHACLdictionary
+    , SHACLmodel
+    , SHACLmodels
+    , Shape
+    , ShapeConstraint(..)
+    , ShapeKind(..)
+    , ValueTypeUnion(..)
+    , ValueUnion(..)
+    , ValuesList
+    , emptyShape
+    )
 
 import Dict exposing (Dict)
 import Rdf.Core.Types
@@ -26,12 +47,6 @@ import SHACL.Internal.CoreTypes
         )
 
 
-
--- shapeConstraint : ShapeConstraint -> ConstraintKind
--- shapeConstraint constraint =
---     ShapeConstraint constraint
-
-
 type alias SHACLmodels =
     Dict GraphId SHACLmodel
 
@@ -53,10 +68,6 @@ type alias Class =
     , properties : Maybe (List PropertyValues)
     , traits : Maybe (List AspectId)
     }
-
-
-type alias SingleConstraintOccurrence =
-    { occurrence : ( SubjectId, RDFobject ), property : PropertyId }
 
 
 type SHACLconstruct
@@ -150,53 +161,6 @@ type ShapeConstraint
     | XoneConstraint (List Shape)
 
 
-
--- type ConstraintKind
---     = ShapeConstraint ShapeConstraint
---     | NodeShapeConstraintKind ShapeConstraint
---     | PropertyShapeConstraintKind ShapeConstraint
--- type ShapeConstraint
---     = AndConstraintV1 (List Shape)
---     -- | InConstraint (List ValueUnion)
---     -- | NodeConstraint NodeShapeId
---     -- | NodeKindConstraint NodeKind
---     -- | NotConstraint (List NodeShape)
---     -- | OrConstraint (List Shape)
---     -- | QualifiedValueConstraint ValueUnion
---     -- | XoneConstraint (List Shape)
---     -- | UnresolvedConstraint String
--- type ShapeConstraint
---     = ClosedConstraint Bool
---     | IgnoredPropertiesConstraint (List PropertyId)
---     | TargetClassConstraint (List NamedNodeId)
---     | TargetNodeConstraint NamedNodeId
---     | TargetObjectsOfConstraint NamedNodeId
---     | TargetSubjectsOfConstraint NamedNodeId
--- type ShapeConstraint
---     = ClassConstraint ClassId
---     | DatatypeConstraint DataTypeId
---     | EqualsConstraint NodeKind
---     | FlagsConstraint String
---     | GroupConstraint PropertyGroupId
---     | HasValueConstraint ValueUnion
---     | LessThanConstraint PropertyId
---     | LessThanOrEqualsConstraint PropertyId
---     | MaxCountConstraint Int
---     | MaxInclusiveConstraint NumericUnion
---     | MaxLengthConstraint Int
---     | MinCountConstraint Int
---     | MinInclusiveConstraint NumericUnion
---     | MinLengthConstraint Int
---     | NameConstraint String
---     | OrderConstraint NumericUnion
---     | PathConstraint String
---     | PatternConstraint String
---     | QualifiedMinCountConstraint Int
---     | QualifiedMaxCountConstraint Int
---     | UniqueLangConstraint Bool
---     | ValuesConstraint (List NodeShape)
-
-
 type alias ConstraintComponent =
     { property : PropertyId
     , description : MarkdownString
@@ -239,10 +203,6 @@ type ConstraintComponentType
     | ListConstraintType
     | PropertyPairConstraintType
     | LogicalConstraintType
-
-
-
--- Non-validated ones: name, description, order, group
 
 
 type ValueTypeConstraintComponent
