@@ -24,6 +24,21 @@ The naming `Internal` follows the conventional Elm soft-private signal.
 Consumers may import these directly when they need constructor access
 that doesn't propagate through type aliases.
 
+
+# String aliases
+
+@docs FilePath, GraphId, IRI, LangString, MarkdownString, Prefix, PrefixDictionary, PropertyId, TermId
+
+
+# Nominal custom types
+
+@docs GraphRole, StringType
+
+
+# Records embedding the nominal types
+
+@docs GraphMetaData
+
 -}
 
 import Rdf.Core.Types

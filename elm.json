@@ -5,7 +5,10 @@
     "license": "MIT",
     "version": "1.1.0",
     "exposed-modules": [
+        "SHACL.AST.Builder.Constraints",
+        "SHACL.AST.Builder.Constraints.SHACLpredicates",
         "SHACL.InferenceShapeDictionary",
+        "SHACL.Internal.CoreTypes",
         "SHACL.SHACLtypes",
         "SHACL.ShapeDictionary",
         "SHACL.ValidationTypes"

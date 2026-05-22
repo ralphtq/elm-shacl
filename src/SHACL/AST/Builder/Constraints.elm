@@ -1,4 +1,50 @@
-module SHACL.AST.Builder.Constraints exposing (..)
+module SHACL.AST.Builder.Constraints exposing
+    ( buildClassConstraint
+    , buildDatatypeConstraint
+    , buildGroupConstraint
+    , buildHasValueConstraint
+    , buildLessThanConstraint
+    , buildLessThanOrEqualsConstraint
+    , buildMaxCountConstraint
+    , buildMaxInclusiveConstraint
+    , buildMaxLengthConstraint
+    , buildMinCountConstraint
+    , buildMinInclusiveConstraint
+    , buildMinLengthConstraint
+    , buildNameConstraint
+    , buildOrderConstraint
+    , buildPatternConstraint
+    , buildPropertyShapeConstraints
+    , buildQualifiedMaxCountConstraint
+    , buildQualifiedMinCountConstraint
+    , buildShapeConstraint
+    , buildUniqueLangConstraint
+    , buildValuesConstraint
+    )
+
+{-| Builders that turn SHACL constraint quads into typed
+`ShapeConstraint` values for the AST.
+
+WIP — most builders currently return placeholder values; full quad
+inspection per constraint is the next iteration.
+
+
+# Shape-level constraint dispatch
+
+@docs buildShapeConstraint, buildPropertyShapeConstraints
+
+
+# Per-constraint builders
+
+@docs buildClassConstraint, buildDatatypeConstraint, buildGroupConstraint
+@docs buildHasValueConstraint, buildLessThanConstraint, buildLessThanOrEqualsConstraint
+@docs buildMaxCountConstraint, buildMaxInclusiveConstraint, buildMaxLengthConstraint
+@docs buildMinCountConstraint, buildMinInclusiveConstraint, buildMinLengthConstraint
+@docs buildNameConstraint, buildOrderConstraint, buildPatternConstraint
+@docs buildQualifiedMaxCountConstraint, buildQualifiedMinCountConstraint
+@docs buildUniqueLangConstraint, buildValuesConstraint
+
+-}
 
 import Dict exposing (Dict)
 import Rdf.Core.Types
@@ -16,6 +62,9 @@ import SHACL.Internal.CoreTypes exposing (..)
 import SHACL.SHACLtypes exposing (..)
 
 
+{-| Build a single shape-level constraint from its constraint id and
+quads. WIP — currently returns `UnresolvedConstraint` for everything.
+-}
 buildShapeConstraint : RDFnonLiteralTerm -> List Quad -> ( TermId, ShapeConstraint )
 buildShapeConstraint constraintId quads =
     let
@@ -26,6 +75,10 @@ buildShapeConstraint constraintId quads =
     ( id, UnresolvedConstraint ("TODO: " ++ id) )
 
 
+{-| Dispatch each predicate in the property shape's quads to the
+appropriate constraint builder, returning the list of typed
+`ShapeConstraint` values.
+-}
 buildPropertyShapeConstraints : PropertyShapeId -> List Quad -> List Quad -> List ShapeConstraint
 buildPropertyShapeConstraints propertyShapeId shapeQuads quads =
     let
@@ -74,6 +127,8 @@ buildPropertyShapeConstraints propertyShapeId shapeQuads quads =
     constraints
 
 
+{-| Build a `sh:pattern` constraint. WIP — placeholder.
+-}
 buildPatternConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildPatternConstraint propertyShapeId quads =
     "a string"
@@ -91,12 +146,16 @@ buildPatternConstraint propertyShapeId quads =
 --     constraintFn propertyId
 
 
+{-| Build a `sh:class` constraint. WIP — placeholder.
+-}
 buildClassConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildClassConstraint propertyShapeId quads =
     "aClass"
         |> ClassConstraint
 
 
+{-| Build a `sh:datatype` constraint. WIP — placeholder.
+-}
 buildDatatypeConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildDatatypeConstraint propertyShapeId quads =
     let
@@ -108,6 +167,8 @@ buildDatatypeConstraint propertyShapeId quads =
         |> DatatypeConstraint
 
 
+{-| Build a `sh:group` constraint. WIP — placeholder.
+-}
 buildGroupConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildGroupConstraint propertyShapeId quads =
     let
@@ -117,6 +178,8 @@ buildGroupConstraint propertyShapeId quads =
     GroupConstraint anId
 
 
+{-| Build a `sh:hasValue` constraint. WIP — placeholder.
+-}
 buildHasValueConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildHasValueConstraint propertyShapeId quads =
     let
@@ -128,18 +191,25 @@ buildHasValueConstraint propertyShapeId quads =
         |> HasValueConstraint
 
 
+{-| Build a `sh:lessThan` constraint. WIP — placeholder.
+-}
 buildLessThanConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildLessThanConstraint propertyShapeId quads =
     "propertyId"
         |> LessThanConstraint
 
 
+{-| Build a `sh:lessThanOrEquals` constraint. WIP — placeholder.
+-}
 buildLessThanOrEqualsConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildLessThanOrEqualsConstraint propertyShapeId quads =
     "propertyId"
         |> LessThanOrEqualsConstraint
 
 
+{-| Build a `sh:maxCount` constraint from the value-count of the
+relevant quads.
+-}
 buildMaxCountConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildMaxCountConstraint propertyShapeId quads =
     objectsForGivenSubjectPredicate (NamedNode propertyShapeId) "sh:minCount" quads
@@ -147,6 +217,8 @@ buildMaxCountConstraint propertyShapeId quads =
         |> MaxCountConstraint
 
 
+{-| Build a `sh:maxInclusive` constraint. WIP — placeholder integer.
+-}
 buildMaxInclusiveConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildMaxInclusiveConstraint propertyShapeId quads =
     let
@@ -158,12 +230,17 @@ buildMaxInclusiveConstraint propertyShapeId quads =
         |> MaxInclusiveConstraint
 
 
+{-| Build a `sh:maxLength` constraint. WIP — placeholder integer.
+-}
 buildMaxLengthConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildMaxLengthConstraint propertyShapeId quads =
     901
         |> MaxLengthConstraint
 
 
+{-| Build a `sh:minCount` constraint from the value-count of the
+relevant quads.
+-}
 buildMinCountConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildMinCountConstraint propertyShapeId quads =
     objectsForGivenSubjectPredicate (NamedNode propertyShapeId) "sh:minCount" quads
@@ -172,6 +249,8 @@ buildMinCountConstraint propertyShapeId quads =
         |> MinCountConstraint
 
 
+{-| Build a `sh:minInclusive` constraint. WIP — placeholder integer.
+-}
 buildMinInclusiveConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildMinInclusiveConstraint propertyShapeId quads =
     let
@@ -183,18 +262,24 @@ buildMinInclusiveConstraint propertyShapeId quads =
         |> MinInclusiveConstraint
 
 
+{-| Build a `sh:minLength` constraint. WIP — placeholder integer.
+-}
 buildMinLengthConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildMinLengthConstraint propertyShapeId length =
     903
         |> MinLengthConstraint
 
 
+{-| Build a `sh:name` constraint. WIP — placeholder.
+-}
 buildNameConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildNameConstraint propertyShapeId quads =
     "aString"
         |> NameConstraint
 
 
+{-| Build a `sh:order` constraint. WIP — placeholder integer.
+-}
 buildOrderConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildOrderConstraint propertyShapeId quads =
     let
@@ -206,24 +291,32 @@ buildOrderConstraint propertyShapeId quads =
         |> OrderConstraint
 
 
+{-| Build a `sh:qualifiedMaxCount` constraint. WIP — placeholder integer.
+-}
 buildQualifiedMaxCountConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildQualifiedMaxCountConstraint propertyShapeId quads =
     904
         |> QualifiedMaxCountConstraint
 
 
+{-| Build a `sh:qualifiedMinCount` constraint. WIP — placeholder integer.
+-}
 buildQualifiedMinCountConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildQualifiedMinCountConstraint propertyShapeId quads =
     905
         |> QualifiedMinCountConstraint
 
 
+{-| Build a `sh:uniqueLang` constraint. WIP — placeholder.
+-}
 buildUniqueLangConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildUniqueLangConstraint propertyShapeId quads =
     True
         |> UniqueLangConstraint
 
 
+{-| Build a `sh:values` constraint. WIP — placeholder empty list.
+-}
 buildValuesConstraint : PropertyShapeId -> List Quad -> ShapeConstraint
 buildValuesConstraint propertyShapeId quads =
     []

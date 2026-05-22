@@ -18,6 +18,52 @@ module SHACL.InferenceShapeDictionary exposing
     , toPortRequest
     )
 
+{-| SHACL-driven inference catalog and loader pipeline.
+
+An `InferenceTransformers` value is the declarative top-level catalog:
+a named list of inference jobs (`InferenceTransformSpec`) plus a path
+to the shared SHACL functions library. Each spec is tagged with its
+execution shape via `InferenceTransformKind` — a SHACL rule TTL, a
+template TTL with a SPARQL `.rq` body inlined, a SHACL-SPARQL TTL, or
+a bare SPARQL `CONSTRUCT` query.
+
+A round-trip through ports (`toPortRequest` →
+`loadedInferenceTransformsDecoder` → `inferredQuadsForTransformDecoder`)
+loads each spec's file contents, runs them via the Jena SHACL
+inference engine, and returns the inferred quads.
+
+
+# Spec catalog
+
+@docs InferenceTransformers, InferenceTransformSpec, AuxiliaryTtl, InferenceTransformKind
+
+
+# Port payload (Elm → TS)
+
+@docs PortInferenceTransformsRequest, PortInferenceTransformSpec, toPortRequest
+
+
+# Path joining and graph-filter helpers
+
+@docs combineDirectoryAndPath, specApplicableToGraph, applicableTransformsForGraph
+
+
+# Loaded payload (TS → Elm)
+
+@docs LoadedInferenceTransforms, LoadedTransform, LoadedTransformKind
+
+
+# Shapes-TTL synthesis
+
+@docs shapesTtlForLoadedKind
+
+
+# Decoders
+
+@docs loadedInferenceTransformsDecoder, inferredQuadsForTransformDecoder, inferenceTransformErrorDecoder
+
+-}
+
 import Json.Decode as D
 import Rdf.Wire.Types exposing (JSONrdfObject, JSONrdfQuad, JSONrdfTermTypeAndValue)
 import SHACL.Internal.CoreTypes exposing (FilePath, GraphId)
@@ -43,6 +89,10 @@ type alias InferenceTransformers =
     }
 
 
+{-| One inference job within an `InferenceTransformers` catalog: its
+name, execution shape (`InferenceTransformKind`), destination file
+path, and optional graph-scope restriction lists.
+-}
 type alias InferenceTransformSpec =
     { name : String
     , inferenceTransformKind : InferenceTransformKind
@@ -102,6 +152,9 @@ type alias PortInferenceTransformSpec =
     }
 
 
+{-| Port-safe top-level transforms request: the catalog name, base
+directory, shared functions path, and a flat list of port specs.
+-}
 type alias PortInferenceTransformsRequest =
     { name : String
     , directory : FilePath
@@ -275,6 +328,11 @@ type alias LoadedInferenceTransforms =
     }
 
 
+{-| One transform after the TS loader has inlined its file contents:
+name, destination path, the resolved kind with its content, any error
+message, the (initially empty) inferred quads buffer, and a timestamp
+slot.
+-}
 type alias LoadedTransform =
     { name : String
     , destinationFilePath : FilePath
@@ -311,6 +369,9 @@ type LoadedTransformKind
     | LoadedTransformKindUnknown String
 
 
+{-| Decoder for the `LoadedInferenceTransforms` JSON payload sent by
+the TS loader after it reads the rule / template / query files.
+-}
 loadedInferenceTransformsDecoder : D.Decoder LoadedInferenceTransforms
 loadedInferenceTransformsDecoder =
     D.map6
@@ -427,6 +488,10 @@ loadedTransformKindDecoder =
 -- treat that as "transform cannot be run".
 
 
+{-| Produce a SHACL-shapes TTL string from a `LoadedTransformKind`.
+Returns `Nothing` for `LoadedTransformKindUnknown` (the runner treats
+that as "transform cannot be run").
+-}
 shapesTtlForLoadedKind : LoadedTransformKind -> Maybe String
 shapesTtlForLoadedKind kind =
     case kind of
@@ -652,6 +717,9 @@ inferredQuadsForTransformDecoder =
         (D.field "quads" (D.list jsonRdfQuadDecoder))
 
 
+{-| Decoder for a per-transform inference error payload sent by the TS
+layer when a transform fails (`{ name, message }`).
+-}
 inferenceTransformErrorDecoder :
     D.Decoder
         { name : String

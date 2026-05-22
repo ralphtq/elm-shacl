@@ -1,13 +1,17 @@
 module SHACL.SHACLtypes exposing
-    ( Class
+    ( BlankNodeRecord
+    , Class
     , ConstraintComponent
     , ConstraintComponentType
     , ConstraintValidator(..)
+    , DataTypeId
     , Instance
     , NodeShape
+    , NumericUnion(..)
     , Property
     , PropertyGroup
     , PropertyShape
+    , PropertyShapeId
     , SHACLconstruct(..)
     , SHACLdictionary
     , SHACLmodel
@@ -20,6 +24,47 @@ module SHACL.SHACLtypes exposing
     , ValuesList
     , emptyShape
     )
+
+{-| Core SHACL AST types: shapes, constraints, and the per-graph
+`SHACLmodel` that holds the parsed constructs for one named graph.
+
+A `SHACLmodel` is a dictionary keyed by `TermId` over `SHACLconstruct`
+values — each construct is either a node, a class, a property, a
+node shape, a property shape, a property group, a values list, a
+shape-level constraint, or a blank-node record. The AST is intentionally
+non-recursive at the top level; shape constraints reference other
+shapes by id and are resolved at render time.
+
+This module ships the type definitions only. The AST builder lives in
+`SHACL.AST.Builder.*` and is layered on top.
+
+
+# Per-graph SHACL model
+
+@docs SHACLmodel, SHACLmodels, SHACLdictionary, SHACLconstruct
+
+
+# Class / Instance / Property
+
+@docs Class, Instance, Property, PropertyGroup, ValuesList, BlankNodeRecord
+
+
+# Shapes
+
+@docs Shape, NodeShape, PropertyShape, ShapeKind, emptyShape
+
+
+# Constraints
+
+@docs ShapeConstraint, ConstraintComponent, ConstraintComponentType
+@docs ConstraintValidator, ValueUnion, ValueTypeUnion
+
+
+# Identifier aliases
+
+@docs DataTypeId, PropertyShapeId, NumericUnion
+
+-}
 
 import Dict exposing (Dict)
 import Rdf.Core.Types
@@ -47,10 +92,17 @@ import SHACL.Internal.CoreTypes
         )
 
 
+{-| Map of `SHACLmodel` values keyed by graph id.
+-}
 type alias SHACLmodels =
     Dict GraphId SHACLmodel
 
 
+{-| The parsed SHACL constructs for a single named graph: the list of
+graph ids this model covers (usually a singleton), optional graph
+metadata, the construct dictionary, and the ids of graphs this one
+depends on.
+-}
 type alias SHACLmodel =
     { graphIds : List GraphId
     , metadata : Maybe GraphMetaData
@@ -59,6 +111,10 @@ type alias SHACLmodel =
     }
 
 
+{-| A class in the SHACL model: id, optional name, optional reference
+to a node shape that validates instances, and the class's metaclasses,
+superclasses, properties, and traits.
+-}
 type alias Class =
     { classId : String
     , name : Maybe StringType
@@ -70,6 +126,10 @@ type alias Class =
     }
 
 
+{-| One construct in a `SHACLmodel`: a node, instance, class, property,
+node shape, property shape, property group, values list, top-level
+constraint, or blank-node record.
+-}
 type SHACLconstruct
     = SHACLnode TermId
     | SHACLinstance Instance
@@ -97,6 +157,11 @@ type SHACLconstruct
 -}
 
 
+{-| The base shape record shared by `NodeShape` and `PropertyShape` via
+the `extendsShape` field. Holds the shape's id, optional constraints,
+label, alt labels, description, list of property shape ids, and SHACL
+targets (`sh:targetClass`, `sh:targetNode`, etc.).
+-}
 type alias Shape =
     { id : String
     , constraints : Maybe (List ShapeConstraint)
@@ -108,6 +173,9 @@ type alias Shape =
     }
 
 
+{-| A SHACL `sh:NodeShape` — shape-level constraints applied to focus
+nodes selected by the shape's targets.
+-}
 type alias NodeShape =
     { extendsShape : Shape
     , constraints : Maybe (List ShapeConstraint)
@@ -115,6 +183,9 @@ type alias NodeShape =
     }
 
 
+{-| A SHACL `sh:PropertyShape` — property-level constraints on the
+values produced by following a property path from a focus node.
+-}
 type alias PropertyShape =
     { extendsShape : Shape
     , propertyShapeFor : Maybe (List RDFnonLiteralTerm)
@@ -130,10 +201,21 @@ type alias PropertyShape =
     }
 
 
+{-| Shape-classification tag. WIP — currently a single placeholder
+variant; future revisions will distinguish node-shape and property-shape
+kinds at this level.
+-}
 type ShapeKind
     = ShapeShapeKind
 
 
+{-| Enumeration of SHACL constraint components in their parsed,
+typed form. One variant per SHACL spec constraint:
+`sh:class`, `sh:datatype`, `sh:and`/`sh:or`/`sh:not`/`sh:xone`,
+`sh:minCount`/`sh:maxCount`, cardinality, value range, length,
+pattern, uniqueLang, etc. `UnresolvedConstraint` carries the raw
+predicate text for anything the builder cannot yet parse.
+-}
 type ShapeConstraint
     = AndConstraint (List Shape)
     | ClassConstraint ClassId
@@ -161,6 +243,12 @@ type ShapeConstraint
     | XoneConstraint (List Shape)
 
 
+{-| Metadata about one SHACL constraint component (e.g. `sh:minCount`):
+the SHACL property iri, a human-readable description, whether it can
+appear on a node shape, its component category, its value type, whether
+multiple values are allowed, and the validator + transformer used by
+the builder.
+-}
 type alias ConstraintComponent =
     { property : PropertyId
     , description : MarkdownString
@@ -173,6 +261,9 @@ type alias ConstraintComponent =
     }
 
 
+{-| Validator hook for a constraint component. `ConstraintValidatorTBD`
+is the placeholder used when no validator has been wired up yet.
+-}
 type ConstraintValidator
     = ConstraintValidatorTBD
     | ConstraintValidator ValidateConstraintComponent
@@ -195,6 +286,10 @@ type ConstraintMappingDictionary
     = Dict PropertyId ConstraintComponent
 
 
+{-| Category tag for a `ConstraintComponent`. Mirrors the SHACL spec
+grouping: value-type, cardinality, value-range, string-based,
+list-based, property-pair, and logical constraints.
+-}
 type ConstraintComponentType
     = ValueTypeConstraintType
     | CardinalityConstraintType
@@ -229,6 +324,9 @@ type BlankNodeOrLiteral
     = BNOLliteral LiteralType
 
 
+{-| Value carried by a constraint that takes a single SHACL value:
+absent, a blank node, a named node (IRI), or a string-shaped literal.
+-}
 type ValueUnion
     = NoValue
     | BlankNodeValue BlankNodeId
@@ -240,6 +338,9 @@ type NodeKind
     = LiteralNode LiteralType
 
 
+{-| Type-of-value declaration used in `ConstraintComponent.valueType`:
+non-literal (named or blank node), literal, literal-union, or node-kind.
+-}
 type ValueTypeUnion
     = NonLiteralValueType NonLiteralType
     | LiteralValueType LiteralType
@@ -252,6 +353,9 @@ type PropertyShapeKind
     | UnresolvedPropertyShape
 
 
+{-| A property in the SHACL model: id, type, optional label and
+description.
+-}
 type alias Property =
     { propertyId : PropertyId
     , type_ : ResourceId
@@ -261,6 +365,9 @@ type alias Property =
     }
 
 
+{-| A SHACL `sh:PropertyGroup` — labels a collection of property shapes
+for ordered display.
+-}
 type alias PropertyGroup =
     { propertyGroupId : PropertyGroupId
     , label : Maybe String
@@ -269,6 +376,10 @@ type alias PropertyGroup =
     }
 
 
+{-| An instance (individual) in the model: id, name, alt names,
+description, the list of classes it's an instance of, and its
+property/value pairs.
+-}
 type alias Instance =
     { id : String
     , name : Maybe StringType
@@ -280,6 +391,8 @@ type alias Instance =
     }
 
 
+{-| A SHACL `sh:in`-style enumerable list of allowed values.
+-}
 type alias ValuesList =
     { id : String
     , values : List String -- List ( PredicateTerm, RDFterm ) -- List ValueUnion
@@ -287,6 +400,10 @@ type alias ValuesList =
     }
 
 
+{-| A blank node as it appears in the AST: blank-node id, the
+predicate/object pairs that originate at it, the subject/predicate pairs
+that reference it, and an optional derivation pointer.
+-}
 type alias BlankNodeRecord =
     { id : String
     , fields : List ( PredicateTerm, RDFterm )
@@ -301,6 +418,9 @@ type alias PropertyValues =
     }
 
 
+{-| Numeric value union for constraints that take an integer (and in
+the future, floats / decimals).
+-}
 type NumericUnion
     = IntValue Int
 
@@ -324,25 +444,15 @@ type XSDiri
     | XSDboolean
 
 
+{-| Dictionary form of a graph's constructs, keyed by `TermId`.
+Equivalent to `SHACLmodel.constructs`.
+-}
 type alias SHACLdictionary =
     Dict TermId SHACLconstruct
 
 
 type alias SHACLconstructsDictionary construct =
     Dict TermId construct
-
-
-graphRoleToString : GraphRole -> String
-graphRoleToString graphRole =
-    case graphRole of
-        SchemaGraph ->
-            "Schema Graph"
-
-        VocabGraph ->
-            "Vocabulary Graph"
-
-        UnspecifiedGraphRole ->
-            "Unspecified Graph Role"
 
 
 type alias PropertyOrder =
@@ -353,6 +463,9 @@ type alias AspectId =
     String
 
 
+{-| String identifier for an XSD datatype IRI (typically CURIE-form like
+`"xsd:integer"`).
+-}
 type alias DataTypeId =
     String
 
@@ -365,6 +478,9 @@ type alias NodeShapeId =
     String
 
 
+{-| String identifier for a `PropertyShape` (typically its `sh:path`
+target in CURIE form).
+-}
 type alias PropertyShapeId =
     String
 
@@ -373,6 +489,9 @@ type alias ResourceId =
     String
 
 
+{-| Empty `Shape` with no constraints, label, or targets. Useful as a
+starting value when building a shape incrementally.
+-}
 emptyShape : Shape
 emptyShape =
     { id = ""
