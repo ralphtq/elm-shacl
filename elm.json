@@ -3,8 +3,10 @@
     "name": "ralphtq/elm-shacl",
     "summary": "SHACL types, shape dictionaries, and validation report types for Elm",
     "license": "MIT",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "exposed-modules": [
+        "SHACL.InferenceShapeDictionary",
+        "SHACL.SHACLtypes",
         "SHACL.ShapeDictionary",
         "SHACL.ValidationTypes"
     ],
@@ -12,7 +14,9 @@
     "dependencies": {
         "elm/core": "1.0.5 <= v < 2.0.0",
         "elm/json": "1.1.4 <= v < 2.0.0",
-        "ralphtq/elm-rdf": "1.0.0 <= v < 2.0.0"
+        "elm/time": "1.0.0 <= v < 2.0.0",
+        "ralphtq/elm-rdf": "1.0.0 <= v < 2.0.0",
+        "ralphtq/elm-rdf-n3-quads": "1.0.0 <= v < 2.0.0"
     },
     "test-dependencies": {
         "elm-explorations/test": "2.0.0 <= v < 3.0.0"
