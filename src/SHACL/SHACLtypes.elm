@@ -12,6 +12,8 @@ module SHACL.SHACLtypes exposing
     , PropertyGroup
     , PropertyShape
     , PropertyShapeId
+    , PropertyShapeKind(..)
+    , PropertyValues
     , SHACLconstruct(..)
     , SHACLdictionary
     , SHACLmodel
@@ -51,7 +53,7 @@ This module ships the type definitions only. The AST builder lives in
 
 # Shapes
 
-@docs Shape, NodeShape, PropertyShape, ShapeKind, emptyShape
+@docs Shape, NodeShape, PropertyShape, PropertyShapeKind, ShapeKind, emptyShape
 
 
 # Constraints
@@ -63,6 +65,11 @@ This module ships the type definitions only. The AST builder lives in
 # Identifier aliases
 
 @docs DataTypeId, PropertyShapeId, NumericUnion
+
+
+# Property values
+
+@docs PropertyValues
 
 -}
 
@@ -348,6 +355,9 @@ type ValueTypeUnion
     | NodeKindValueType NonLiteralType
 
 
+{-| Property-shape category: tagged by datatype, or unresolved at
+build time.
+-}
 type PropertyShapeKind
     = DatatypePropertyShape DataTypeId
     | UnresolvedPropertyShape
@@ -412,6 +422,9 @@ type alias BlankNodeRecord =
     }
 
 
+{-| Record pairing a property IRI with its list of values for a given
+subject. Used by `Instance.properties` and `Class.properties`.
+-}
 type alias PropertyValues =
     { property : IRI
     , values : List ValueUnion
