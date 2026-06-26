@@ -106,11 +106,21 @@ type alias TermId =
 -- NOMINAL CUSTOM TYPES (the reason this module exists)
 
 
-{-| The role a graph plays in a SHACL workspace: a SHACL schema graph,
-a vocabulary/ontology graph, or unspecified.
+{-| The role a graph plays in a SHACL workspace:
+
+  - `InferencesGraph` — holds inference/rules (e.g. SHACL rules) graphs.
+  - `ReferenceDataGraph` — reference/ancillary data graphs.
+  - `SchemaGraph` — a SHACL/ontology schema graph.
+  - `ValidationGraph` — holds SHACL shapes used to validate other graphs.
+  - `VocabGraph` — a vocabulary/ontology graph.
+  - `UnspecifiedGraphRole` — role not (yet) assigned.
+
 -}
 type GraphRole
-    = SchemaGraph
+    = InferencesGraph
+    | ReferenceDataGraph
+    | SchemaGraph
+    | ValidationGraph
     | VocabGraph
     | UnspecifiedGraphRole
 

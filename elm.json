@@ -3,7 +3,7 @@
     "name": "ralphtq/elm-shacl",
     "summary": "SHACL types, shape dictionaries, and validation report types for Elm",
     "license": "MIT",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "exposed-modules": [
         "SHACL.AST.Builder.Constraints",
         "SHACL.AST.Builder.Constraints.SHACLpredicates",
